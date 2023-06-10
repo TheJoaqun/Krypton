@@ -1,188 +1,131 @@
-> Next generation of the Dashboard is out! <br>
-> https://github.com/SonMooSans/discord-bot-dashboard-2
+# Discord Bot Template
 
-![Demo](document/img.png)
-
-# D-Dash: Discord Bot Dashboard
-
-A Full-Featured Dashboard Template for Discord Bots
-<br>
-You can modify `config/config.js` to edit configuration without touching the codes
-<br>
-Feel free to contribute this project
-
-**Watch the Demo on [YouTube](https://youtu.be/Z90Ax-v4uH4)**
+The powerful discord bot template with Next.js Dashboard and Discord.js v14.
 
 ## Features
-* Modern Design with Chakra UI
-* Localization Support (English and Chinese)
-* Customizable UI (`config.js`)
-* Built-in **Features** and **Actions** System
-* Existing Backend Implementation
 
-## Getting Started
-**First, clone this Template**
+-   [x] Node.js Discord Bot with discord-fp
+-   [x] Kafka Event Streaming
+-   [x] Dashboard using Next.js App Router
+-   [x] Documentation Website
+
+## Quick Start
+
+**Demo:** https://money-shark.vercel.app <br/>
+
+### Installation
+
+Clone the project:
+
 ```
-git clone https://github.com/SonMooSans/discord-bot-dashboard.git
+git clone https://github.com/SonMooSans/discord-bot-template.git
 ```
 
-D-Dash is not just a Template, it supports to add **Feature** and **Action** in configuration
-<br>
-Therefore, it requires a full Backend Implementation.
-<br>
-For the implementation in Kotlin, See the [Example](https://github.com/SonMooSans/discord-bot-dashboard-backend)
+Install dependencies, notice that this project uses [pNPM](https://pnpm.io/) as package manager:
 
-You may implement your own Backend APi in another languages by implementing routes mentioned in its README
+```
+pnpm i
+```
 
-## Configuration
-Go to the [config.js](src/config/config.js)
-<br>
-This configuration allows you to customize the UI, there is a `config.d.ts` for type annotations
+### Commands
 
-### Normal Settings
-You need to specify the API Url and invite url of your bot
-<br>
-You might also add footer items in configuration
-```javascript
-const config = {
-    name: "Bot Name",
-    footer: [
-        {
-            name: "Hello World",
-            url: "https://github.com"
-        }
-    ],
-    //API url
-    serverUrl: "http://localhost:8080",
-    //Invite url of your bot
-    inviteUrl: "https://discord.com/api/oauth2/authorize?client_id=1004280473956139038&permissions=8&scope=bot",
+This project is a monorepo, You can run the project in development mode:
+
+```
+pnpm run dev
+```
+
+Create Production Build:
+
+```
+pnpm run build
+```
+
+### Discord OAuth
+
+Add `https://<app_url>/api/auth/callback` as a Redirect Uri in Developer Portal.
+
+### Environment Variables
+
+Required variables are listed in [.env.example](/.env.example).
+
+This project uses [Upstash Kafka](https://upstash.com/), you can register an account and get required credentials there.
+
+Notice that you need to update Prisma schema as your database change.
+
+### Database
+
+This project uses [Prisma ORM](https://www.prisma.io/), you may migrate to other ORMs such as Drizzle ORM if you wanted.
+
+Push database changes:
+
+```
+pnpm run db:push
+```
+
+Please make sure all environment variables are all settled before running the command.
+
+Learn More about Prisma ORM from their [documentation](https://www.prisma.io/docs/getting-started/quickstart).
+
+## Project Structure
+
+This project is using Turborepo, you can learn more about it from their [documentation](https://turbo.build/).
+
+| Package                                    | Description                        |
+| ------------------------------------------ | ---------------------------------- |
+| [apps/web](./apps/web/README.md)           | Web App + Documentation (Frontend) |
+| [apps/bot](./apps/bot/README.md)           | Discord Bot                        |
+| [packages/docs](./packages/docs/README.md) | Documentation (Content + Utils)    |
+| [packages/ui](./packages/ui/)              | Components & Utils                 |
+| packages/config                            | Configuration Files                |
+
+_Learn more about these packages by reading their README.md file_
+
+## Security
+
+It'll checks for user permissions before doing any operations.
+
+You can enable permission checking in a Server Action or Route Handler by doing:
+
+```ts
+import { checkPermissions } from "@/utils/actions/permissions";
+
+export async function myAction() {
+    "use server";
+
+    //notice that it is an async function
+    await checkPermissions();
 }
 ```
 
-### Display Data or Statistics
-You can customize data to display in your dashboard.
-<br>
-#### Items function
-it reads `detail` and `state`, then returns `DataItem` array which determines what to display
+## Scalability
 
-#### Dashboard Data
-It is an Array of Dashboard Data Row, you can customize options of each row to get additional data from `state`
+### Don't depend on "Server"
 
-Each Data Row contains a items function
-<br>
-You can set `advanced` to true, so the dashboard will fetch `/guild/:guild/detail/advanced` and pass the result to the function by `state.advanced`
-It will be displayed in **Statistics** Tab
+We use Kafka for handling real operations via dashboard, so that no requests will be sent to the server that hosts the discord bot directly.
 
-#### Actions and Features Data
-They are both **Items function**
+This brings a faster load speed and more better stability because the dashboad will still works even if the discord bot is temporarily unavailable.
 
-It will be displayed in **Actions** and **Features** Tab
-<br>
-you can display the statistics of things like **Ranks**, **Reaction Role** 
+### Serverless Ready
 
-```javascript
-const config = {
-    data: {
-        dashboard: [
-            {
-                advanced: true,
-                count: 3, //count of placeholders
-                //advanced will be null if row.advanced is false
-                items: (detail, {advanced}) => [
-                    DataItem
-                ]
-            }
-        ],
-        actions: detail => [
-            DataItem
-        ],
-        features: detail => [
-            DataItem
-        ]
-    }
-}
-```
+The dashboard is built for serverless, you are able to deploy it to any serverless hosting platforms such as Vercel, Azure and AWS.
 
-### Features and Actions
-You must define bot features and actions in configuration
-<br>
-Also, the Features and Actions System must be implemented at your API
+Notice that the Discord bot server can only be deployed to traditional Node.js Server hosting services, serverless environment is incompatible.
 
-#### Feature
-**Feature** is something that can be enabled or disabled, after enabling a feature.
-<br>
-User can edit its options and customize the behavior of bot
+## Typesafe
 
-#### Action
-**Action** contains multi **Tasks**, User can publish or delete Tasks
-<br>
-User must define some options before publishing a task
+Typesafe is the key to maintain a large codebase. Although Javascript + JSDocs is perfect for libraries, it's still recommended to use Typescript for writing applications.
 
-Action can be used for `Reaction Role` since you might want the Reaction Role can be enabled for multi messages
+This template is fully written in Typescript, all the type errors will be reported at build time.
 
-#### Options
-Each Feature and Action requires an options array used to customize settings
-<br>
-When user updates options, server will receive a map of ids and its value
+## Deploy
 
-The **Options Function** will receive the `values` of feature/action fetched from server
-<br>
-For **Action**, values will be null before user publish the Task
+It is easy to deploy this application.
 
-```javascript
-const config = {
-    features: {
-        "id_of_feature": {
-            name: "Welcome Message",
-            description: "Send a Mesage to welcome a member when they just joined the Server",
-            options: (values) => [
-                //Example option
-                {
-                    id: "message",
-                    name: "Message",
-                    description: "The message to be sent",
-                    type: OptionTypes.Message_Create, //A Message/Embed Creator 
-                    value: values? values.message : "",
-                }
-            ]
-        }
-    },
-    actions: {
-        "id_of_action": {
-            name: "Reaction Role",
-            description: "Give user a role when reacts to a Message",
-            //values will be null before user publish the Task
-            options: (values) => [
-                //Example option
-                {
-                    id: "message",
-                    name: "Message",
-                    description: "The message to be sent",
-                    type: OptionTypes.Message_Create, //A Message/Embed Creator 
-                    value: values? values.message : "",
-                },
-            ]
-        }
-    }
-}
-```
+### Web App
 
-### Multi Languages
-Some fields support Multi Languages
-<br>
-You can see their type annotations to check about it
+The fastest way to deploy Next.js applications is to use [Vercel](https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app).
 
-For those fields, you can use: 
-```javascript
-text = {
-    zh: "Chinese",
-    en: "English"
-}
-```
+### Bot Server
 
-For now, we only supports **English (en)** or **Chinese (zh)**.
-<br>
-You can use `<Locale zh="Chinese" en="English" />` on some fields since they may supports `JSXElement`
-
-## the Template of Template
-This Dashboard is Based on [Horizon UI ⚡️](https://horizon-ui.com/horizon-ui-chakra)
+Any hosting platform that supports Node.js, such as [AWS](https://aws.amazon.com/getting-started/hands-on/deploy-nodejs-web-app/), [Render](https://render.com/), [Railway](https://railway.app/).
